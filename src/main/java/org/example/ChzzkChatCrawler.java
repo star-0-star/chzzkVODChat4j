@@ -22,14 +22,6 @@ public class ChzzkChatCrawler {
         String nextPlayerMessageTime = "0";
         String filePath = "chatLog-" + vodId + ".csv";
 
-        // 방송 시작 시각(openDate)을 미리 조회해 경과 시간 계산에 사용한다. (조회 실패 시 null)
-        ChzzkVideoDetail videoDetail = fetchVideoDetail(vodId);
-        Long openDateMillis =
-                (videoDetail != null) ? videoDetail.liveOpenDateMillis() : null;
-        if (openDateMillis == null) {
-            System.out.println("방송 시작 시각을 알 수 없어 경과 시간 없이 저장합니다.");
-        }
-
         try (ChatCsvWriter csvWriter = new ChatCsvWriter(filePath)) {
 
             while (true) {
@@ -60,8 +52,8 @@ public class ChzzkChatCrawler {
 
                     // 비디오 채팅 데이터를 CSV로 기록
                     for (int i = 0; i < videoChats.length(); i++) {
-                        ChzzkChat chat = ChzzkChatParser.parseChat(
-                                videoChats.getJSONObject(i), openDateMillis);
+                        ChzzkChat chat =
+                                ChzzkChatParser.parseChat(videoChats.getJSONObject(i));
                         csvWriter.write(chat);
                     }
 
@@ -93,45 +85,6 @@ public class ChzzkChatCrawler {
             System.out.println("크롤링이 중단되었습니다: " + e.getMessage());
         } catch (JSONException e) {
             System.out.println("JSON 파싱 중 오류가 발생했습니다: " + e.getMessage());
-        }
-    }
-
-    /**
-     * VOD 상세 정보를 조회합니다. 경과 시간 계산을 위한 부가 정보이므로 실패해도
-     * 채팅 크롤링을 막지 않도록 오류 시 {@code null}을 반환합니다.
-     */
-    private static ChzzkVideoDetail fetchVideoDetail(String vodId) {
-        String url = "https://api.chzzk.naver.com/service/v3/videos/" + vodId;
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .header("User-Agent", USER_AGENT)
-                .GET()
-                .build();
-
-        try {
-            HttpResponse<String> response =
-                    HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-
-            if (response.statusCode() != 200) {
-                System.out.println("방송 정보를 가져오지 못했습니다 (HTTP "
-                        + response.statusCode() + ")");
-                return null;
-            }
-
-            JSONObject content = new JSONObject(response.body()).optJSONObject("content");
-            return (content != null) ? ChzzkVideoDetail.from(content) : null;
-
-        } catch (IOException e) {
-            System.out.println("방송 정보 조회 중 오류가 발생했습니다: " + e.getMessage());
-            return null;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            System.out.println("방송 정보 조회가 중단되었습니다: " + e.getMessage());
-            return null;
-        } catch (JSONException e) {
-            System.out.println("방송 정보 파싱 중 오류가 발생했습니다: " + e.getMessage());
-            return null;
         }
     }
 
