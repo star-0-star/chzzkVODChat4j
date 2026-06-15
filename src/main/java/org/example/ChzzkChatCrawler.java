@@ -5,6 +5,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
 import org.json.JSONArray;
@@ -17,6 +20,13 @@ public class ChzzkChatCrawler {
     private static final String USER_AGENT =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                     + "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/";
+
+    // 파일명 구성 요소. 장르/플랫폼은 현재 하드코딩한다.
+    private static final String GENRE = "버튜버";
+    private static final String PLATFORM = "CHZZK";
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+    private static final DateTimeFormatter FILE_TIME_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyyMMdd");
 
     public static void fetchAndSaveChatData(String vodId) {
         fetchAndSaveChatData(vodId, null, null);
@@ -37,7 +47,7 @@ public class ChzzkChatCrawler {
         Long endMillis = (durationMillis != null) ? startOffset + durationMillis : null;
 
         String nextPlayerMessageTime = String.valueOf(startOffset);
-        String filePath = "chatLog-" + vodId + ".csv";
+        String filePath = buildFilePath(vodId);
 
         try (ChatCsvWriter csvWriter = new ChatCsvWriter(filePath)) {
 
@@ -119,6 +129,71 @@ public class ChzzkChatCrawler {
         } catch (JSONException e) {
             System.out.println("JSON 파싱 중 오류가 발생했습니다: " + e.getMessage());
         }
+    }
+
+    /**
+     * 저장 파일명을 만듭니다. 형식: {@code 방송시작시간_장르_플랫폼_스트리머.csv}.
+     * 방송 정보를 가져오지 못하면 기본 파일명({@code chatLog-{vodId}.csv})으로 대체합니다.
+     */
+    private static String buildFilePath(String vodId) {
+        ChzzkVideoDetail detail = fetchVideoDetail(vodId);
+        if (detail == null || detail.liveOpenDateMillis() == null) {
+            System.out.println("방송 정보를 알 수 없어 기본 파일명으로 저장합니다.");
+            return "chatLog-" + vodId + ".csv";
+        }
+
+        String openTime = FILE_TIME_FORMATTER.format(
+                Instant.ofEpochMilli(detail.liveOpenDateMillis()).atZone(KST));
+        String streamer = sanitizeFileName(detail.channelName());
+        return openTime + "_" + GENRE + "_" + PLATFORM + "_" + streamer + ".csv";
+    }
+
+    /**
+     * VOD 상세 정보를 조회합니다. 파일명 생성을 위한 부가 정보이므로 실패해도
+     * 크롤링을 막지 않도록 오류 시 {@code null}을 반환합니다.
+     */
+    private static ChzzkVideoDetail fetchVideoDetail(String vodId) {
+        String url = "https://api.chzzk.naver.com/service/v3/videos/" + vodId;
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("User-Agent", USER_AGENT)
+                .GET()
+                .build();
+
+        try {
+            HttpResponse<String> response =
+                    HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                System.out.println("방송 정보를 가져오지 못했습니다 (HTTP "
+                        + response.statusCode() + ")");
+                return null;
+            }
+
+            JSONObject content = new JSONObject(response.body()).optJSONObject("content");
+            return (content != null) ? ChzzkVideoDetail.from(content) : null;
+
+        } catch (IOException e) {
+            System.out.println("방송 정보 조회 중 오류가 발생했습니다: " + e.getMessage());
+            return null;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.out.println("방송 정보 조회가 중단되었습니다: " + e.getMessage());
+            return null;
+        } catch (JSONException e) {
+            System.out.println("방송 정보 파싱 중 오류가 발생했습니다: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /** 파일명에 쓸 수 없는 문자를 제거합니다. 결과가 비면 {@code "unknown"}. */
+    private static String sanitizeFileName(String value) {
+        if (value == null) {
+            return "unknown";
+        }
+        String cleaned = value.replaceAll("[\\\\/:*?\"<>|\\s]", "");
+        return cleaned.isEmpty() ? "unknown" : cleaned;
     }
 
     public static void main(String[] args) {
