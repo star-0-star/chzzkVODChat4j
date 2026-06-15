@@ -29,7 +29,7 @@ public final class ChatCsvWriter implements Closeable {
         // Excel에서 한글이 깨지지 않도록 UTF-8 BOM 기록
         writer.write('\uFEFF');
         // CSV 헤더
-        writer.write("시간,경과시간(초),메시지타입,유저ID,닉네임,내용");
+        writer.write("시간,경과시간(초),메시지타입,유저ID,닉네임,내용,클립유무");
         writer.newLine();
     }
 
@@ -40,7 +40,8 @@ public final class ChatCsvWriter implements Closeable {
                 + csvEscape(formatChatType(chat.chatType())) + ","
                 + csvEscape(chat.user().uid()) + ","
                 + csvEscape(chat.user().nickname()) + ","
-                + csvEscape(chat.msg());
+                + csvEscape(chat.msg()) + ","
+                + (chat.clip() ? "1" : "0");
         writer.write(row);
         writer.newLine();
     }

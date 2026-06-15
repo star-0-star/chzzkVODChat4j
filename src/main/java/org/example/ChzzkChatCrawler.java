@@ -127,6 +127,10 @@ public class ChzzkChatCrawler {
             System.out.print("다시보기 ID: ");
             String vodId = scanner.nextLine();
             fetchAndSaveChatData(vodId);
+
+            // TODO: 클립 구간 라벨링 (추후 구현)
+            // 채팅을 리스트로 모은 뒤 클립 구간(시작~끝, 초)을 1로 표시:
+            // List<ChzzkChat> labeled = ClipLabeler.markClipRange(chats, startSec, endSec);
         }
     }
 }
