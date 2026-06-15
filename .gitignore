@@ -5,7 +5,7 @@ target/
 .kotlin
 
 ### 크롤링 결과물 ###
-chatLog-*.csv
+*.csv
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
