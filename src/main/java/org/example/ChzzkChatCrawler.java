@@ -77,8 +77,11 @@ public class ChzzkChatCrawler {
 
             System.out.println("모든 채팅 로그가 " + filePath + "에 저장되었습니다.");
 
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             System.out.println("데이터를 가져오는 중 오류가 발생했습니다: " + e.getMessage());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.out.println("크롤링이 중단되었습니다: " + e.getMessage());
         } catch (JSONException e) {
             System.out.println("JSON 파싱 중 오류가 발생했습니다: " + e.getMessage());
         }
