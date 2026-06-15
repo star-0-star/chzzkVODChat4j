@@ -29,13 +29,14 @@ public final class ChatCsvWriter implements Closeable {
         // Excel에서 한글이 깨지지 않도록 UTF-8 BOM 기록
         writer.write('\uFEFF');
         // CSV 헤더
-        writer.write("시간,닉네임,내용,사용자ID");
+        writer.write("시간,경과시간(초),닉네임,내용,사용자ID");
         writer.newLine();
     }
 
     /** 채팅 한 건을 CSV 한 줄로 기록합니다. (각 필드 이스케이프 처리) */
     public void write(ChzzkChat chat) throws IOException {
         String row = csvEscape(formatTime(chat.msgTime())) + ","
+                + csvEscape(formatElapsedSeconds(chat.elapsedSec())) + ","
                 + csvEscape(chat.user().nickname()) + ","
                 + csvEscape(chat.msg()) + ","
                 + csvEscape(chat.user().uid());
@@ -46,6 +47,14 @@ public final class ChatCsvWriter implements Closeable {
     @Override
     public void close() throws IOException {
         writer.close();
+    }
+
+    /** 경과 시간(초)을 정수 초 문자열로 변환합니다. {@code null}이면 빈 문자열. */
+    static String formatElapsedSeconds(Double elapsedSec) {
+        if (elapsedSec == null) {
+            return "";
+        }
+        return String.valueOf(Math.round(elapsedSec));
     }
 
     /** 유닉스 타임스탬프(ms)를 한국 시간 문자열로 변환합니다. {@code null}이면 빈 문자열. */
