@@ -17,8 +17,9 @@ public final class ChzzkChatParser {
         String nickname = parseNickname(chat);
 
         ChzzkUser user = new ChzzkUser(userIdHash, nickname);
+        ChatType chatType = ChatType.fromCode(chat.optInt("messageTypeCode", -1));
         Double elapsedSec = parseElapsedSec(chat);
-        return new ChzzkChat(user, content, messageTime, elapsedSec);
+        return new ChzzkChat(user, content, chatType, messageTime, elapsedSec);
     }
 
     /** 방송 시작 후 경과 시간(초). {@code playerMessageTime}(ms)을 초로 환산합니다. 없으면 {@code null}. */
