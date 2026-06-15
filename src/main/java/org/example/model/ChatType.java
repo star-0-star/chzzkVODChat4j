@@ -1,4 +1,4 @@
-package org.example;
+package org.example.model;
 
 /**
  * 채팅 메시지의 종류입니다. 채팅 메시지의 {@code messageTypeCode}(라이브의 {@code msgTypeCode}) 필드에 대응합니다.

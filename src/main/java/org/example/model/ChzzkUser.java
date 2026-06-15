@@ -1,4 +1,4 @@
-package org.example;
+package org.example.model;
 
 /**
  * 치지직 채팅을 보낸 유저 정보입니다.

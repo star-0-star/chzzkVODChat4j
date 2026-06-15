@@ -1,4 +1,4 @@
-package org.example;
+package org.example.model;
 
 /**
  * 수신한 치지직 채팅 한 건을 나타냅니다.

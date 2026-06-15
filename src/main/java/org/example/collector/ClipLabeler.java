@@ -1,7 +1,9 @@
-package org.example;
+package org.example.collector;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.example.model.ChzzkChat;
 
 /** 채팅에 클립 구간 여부({@link ChzzkChat#clip()})를 표시합니다. 구간은 방송 경과시간(초) 기준입니다. */
 public final class ClipLabeler {

@@ -1,7 +1,11 @@
-package org.example;
+package org.example.api;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import org.example.model.ChatType;
+import org.example.model.ChzzkChat;
+import org.example.model.ChzzkUser;
 
 /** 치지직 비디오 채팅 JSON을 도메인 레코드({@link ChzzkChat})로 변환합니다. */
 public final class ChzzkChatParser {

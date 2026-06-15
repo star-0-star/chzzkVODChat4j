@@ -1,4 +1,4 @@
-package org.example;
+package org.example.csv;
 
 import java.io.BufferedWriter;
 import java.io.Closeable;
@@ -8,6 +8,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+
+import org.example.model.ChatType;
+import org.example.model.ChzzkChat;
 
 /**
  * 치지직 채팅을 CSV 파일로 기록합니다.
