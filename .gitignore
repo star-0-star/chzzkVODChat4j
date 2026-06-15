@@ -4,6 +4,9 @@ target/
 !**/src/test/**/target/
 .kotlin
 
+### 크롤링 결과물 ###
+chatLog-*.csv
+
 ### IntelliJ IDEA ###
 .idea/modules.xml
 .idea/jarRepositories.xml
