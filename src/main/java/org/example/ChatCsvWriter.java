@@ -58,12 +58,12 @@ public final class ChatCsvWriter implements Closeable {
         return chatType.name();
     }
 
-    /** 경과 시간(초)을 정수 초 문자열로 변환합니다. {@code null}이면 빈 문자열. */
+    /** 경과 시간(초)을 소수점 문자열로 변환합니다. {@code null}이면 빈 문자열. */
     static String formatElapsedSeconds(Double elapsedSec) {
         if (elapsedSec == null) {
             return "";
         }
-        return String.valueOf(Math.round(elapsedSec));
+        return String.valueOf(elapsedSec);
     }
 
     /** 유닉스 타임스탬프(ms)를 한국 시간 문자열로 변환합니다. {@code null}이면 빈 문자열. */
