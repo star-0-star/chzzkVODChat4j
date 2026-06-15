@@ -19,7 +19,24 @@ public class ChzzkChatCrawler {
                     + "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/";
 
     public static void fetchAndSaveChatData(String vodId) {
-        String nextPlayerMessageTime = "0";
+        fetchAndSaveChatData(vodId, null, null);
+    }
+
+    /**
+     * 지정한 구간의 채팅만 수집합니다. 구간은 방송 경과시간({@code playerMessageTime}, ms) 기준입니다.
+     *
+     * <p>분 단위로 다루려면 {@code 분 * 60_000}으로 변환해 넘기면 됩니다.
+     * (예: 90분부터 10분간 → {@code start=5_400_000, duration=600_000})
+     *
+     * @param startMillis    수집 시작 지점(ms). {@code null}이면 영상 처음부터.
+     * @param durationMillis 수집 지속 시간(ms). {@code null}이면 끝까지.
+     */
+    public static void fetchAndSaveChatData(
+            String vodId, Long startMillis, Long durationMillis) {
+        long startOffset = (startMillis != null) ? startMillis : 0L;
+        Long endMillis = (durationMillis != null) ? startOffset + durationMillis : null;
+
+        String nextPlayerMessageTime = String.valueOf(startOffset);
         String filePath = "chatLog-" + vodId + ".csv";
 
         try (ChatCsvWriter csvWriter = new ChatCsvWriter(filePath)) {
@@ -50,11 +67,27 @@ public class ChzzkChatCrawler {
 
                 if (code == 200 && videoChats != null && videoChats.length() > 0) {
 
-                    // 비디오 채팅 데이터를 CSV로 기록
+                    // 수집 구간에 해당하는 채팅만 CSV로 기록
+                    boolean reachedEnd = false;
                     for (int i = 0; i < videoChats.length(); i++) {
-                        ChzzkChat chat =
-                                ChzzkChatParser.parseChat(videoChats.getJSONObject(i));
-                        csvWriter.write(chat);
+                        JSONObject chatJson = videoChats.getJSONObject(i);
+                        long playerMessageTime = chatJson.optLong("playerMessageTime", -1);
+
+                        // 시작 지점 이전 채팅은 건너뜀
+                        if (playerMessageTime >= 0 && playerMessageTime < startOffset) {
+                            continue;
+                        }
+                        // 종료 지점을 넘으면 수집 종료
+                        if (endMillis != null && playerMessageTime > endMillis) {
+                            reachedEnd = true;
+                            break;
+                        }
+                        csvWriter.write(ChzzkChatParser.parseChat(chatJson));
+                    }
+
+                    if (reachedEnd) {
+                        System.out.println("지정한 수집 구간 끝에 도달하여 종료합니다.");
+                        break;
                     }
 
                     // 다음 메시지 시간이 null이면 크롤링 종료
